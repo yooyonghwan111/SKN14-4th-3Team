@@ -1,0 +1,115 @@
+{% extends "layout/base.html" %} {% load static %} {% block style %}
+<link rel="stylesheet" href="{% static 'css/index.css' %}" />
+{% endblock style %} {% block content %}
+<div class="container-fluid py-3">
+  <div class="main-container">
+    <div class="row g-0">
+      <!-- 왼쪽: 대화 목록 -->
+      <div class="col-lg-2 col-md-3">
+        <div class="conversation-list p-3">
+          <h6 class="mb-3">대화 목록</h6>
+          <div id="conversationList">
+            <button class="btn conversation-item w-100 active" data-id="1">
+              대화 1
+            </button>
+          </div>
+          <button class="btn new-chat-btn w-100 mt-3" id="newChatBtn">
+            새 대화 시작
+          </button>
+        </div>
+      </div>
+
+      <!-- 중앙: 채팅 영역 -->
+      <div class="col-lg-7 col-md-6">
+        <div class="p-4">
+          <!-- 채팅 메시지 -->
+          <div class="chat-messages" id="chatMessages">
+            <div class="system-message">
+              세탁기/건조기 매뉴얼 Q&A 챗봇이 시작되었습니다.
+            </div>
+          </div>
+
+          <!-- 입력 폼 -->
+          <div class="chat-input-form">
+            <div class="mb-3">
+              <label class="form-label fw-bold"> 이미지 업로드 및 질문 </label>
+            </div>
+
+            <form id="chatForm">
+              <div class="input-group mb-3">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="messageInput"
+                  placeholder="세탁기/건조기에 대해 궁금한 점을 물어보세요!"
+                />
+                <button class="btn send-btn" type="submit">전송</button>
+              </div>
+            </form>
+
+            <!-- 이미지 업로드 영역 -->
+            <div class="image-upload-area" id="imageUploadArea">
+              <input
+                type="file"
+                id="imageInput"
+                accept="image/*"
+                style="display: none"
+              />
+              <p class="text-muted mb-0">
+                클릭하거나 이미지를 드래그하여 업로드하세요
+              </p>
+              <small class="text-muted">JPG, JPEG, PNG 형식 지원</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 오른쪽: 이미지 및 스펙 -->
+      <div class="col-lg-3 col-md-3">
+        <div class="sidebar">
+          <h6 class="mb-3">업로드된 이미지 및 스펙</h6>
+          <div id="imageDisplayArea">
+            <div class="text-center text-muted">
+              <p>현재 대화에 업로드된 이미지가 없습니다.</p>
+            </div>
+          </div>
+
+          <hr>
+
+          <h6>기능 메뉴</h6>
+          <button class="btn btn-danger-custom w-100 mb-2" id="clearAllBtn">
+            모든 대화 기록 삭제
+          </button>
+          <button class="btn btn-success-custom w-100 mb-3" id="downloadBtn">
+            모든 대화 기록 저장
+          </button>
+
+          <hr>
+
+          <h6>통계</h6>
+          <div>
+            <h3 id="totalMessages">0</h3>
+            <small>총 메시지</small>
+          </div>
+          <div>
+            <h3 id="totalConversations">1</h3>
+            <small>대화 수</small>
+          </div>
+
+          <hr>
+
+          <div class="alert info-alert">
+            <h6>정보</h6>
+            <small
+              >이 챗봇은 SAMSUNG/LG 세탁기/건조기 매뉴얼을 기반으로 한 Q&A
+              시스템입니다.</small
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %} {% block script %}
+<script src="{% static 'js/index.js' %}"></script>
+{% endblock script %}
