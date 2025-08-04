@@ -66,16 +66,6 @@
   color: white;
 }
 
-.new-chat-btn {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-  color: white;
-}
-
-.new-chat-btn:hover {
-  background: #218838;
-  box-shadow: 0 6px 12px rgba(40, 167, 69, 0.4);
-}
-
 .chat-messages {
   height: 500px; /* 원하는 높이로 조정 */
   overflow-y: auto;
@@ -212,16 +202,6 @@
   background: #f8f9fa;
   border-left: 1px solid #dee2e6;
   padding: 20px;
-}
-
-.btn-danger-custom {
-  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-  color: white;
-}
-
-.btn-success-custom {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-  color: white;
 }
 
 /* 반응형 */

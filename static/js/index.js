@@ -24,7 +24,9 @@ const imageDisplayArea = document.getElementById("imageDisplayArea");
 const conversationList = document.getElementById("conversationList");
 const newChatBtn = document.getElementById("newChatBtn");
 const clearAllBtn = document.getElementById("clearAllBtn");
+const clearCurrBtn = document.getElementById("clearCurrBtn");
 const downloadBtn = document.getElementById("downloadBtn");
+const downloadCurrBtn = document.getElementById("downloadCurrBtn");
 const totalMessages = document.getElementById("totalMessages");
 const totalConversations = document.getElementById("totalConversations");
 
@@ -52,7 +54,9 @@ function setupEventListeners() {
   // 버튼 이벤트
   newChatBtn.addEventListener("click", createNewConversation);
   clearAllBtn.addEventListener("click", clearAllConversations);
+  clearCurrBtn.addEventListener("click", clearCurrConversations);
   downloadBtn.addEventListener("click", downloadChatHistory);
+  downloadCurrBtn.addEventListener("click", downloadChatCurrHistory);
 }
 
 // 채팅 제출 처리
@@ -343,6 +347,28 @@ function clearAllConversations() {
   }
 }
 
+// 현재 대화 삭제 (해당 대화만 초기화)
+function clearCurrConversations() {
+  if (confirm("정말로 현재 대화 기록을 삭제하시겠습니까?")) {
+    if (conversations[currentConversationId]) {
+      conversations[currentConversationId] = {
+        title: `대화 ${currentConversationId}`,
+        messages: [
+          {
+            role: "system",
+            content: "세탁기/건조기 매뉴얼 Q&A 챗봇이 시작되었습니다.",
+          },
+        ],
+        image: null,
+      };
+      updateChatDisplay();
+      updateStats();
+    } else {
+      alert("현재 대화를 찾을 수 없습니다.");
+    }
+  }
+}
+
 // 채팅 기록 다운로드
 function downloadChatHistory() {
   const data = {
@@ -356,6 +382,36 @@ function downloadChatHistory() {
   const a = document.createElement("a");
   a.href = url;
   a.download = `chat_history_${new Date()
+    .toISOString()
+    .slice(0, 19)
+    .replace(/:/g, "-")}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// 현재 대화 기록만 다운로드
+function downloadChatCurrHistory() {
+  const currConv = conversations[currentConversationId];
+  if (!currConv) {
+    alert("현재 대화 기록이 없습니다.");
+    return;
+  }
+
+  const data = {
+    title: currConv.title,
+    messages: currConv.messages,
+    image: currConv.image,
+    downloadDate: new Date().toISOString(),
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/json",
+  });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `chat_${currentConversationId}_${new Date()
     .toISOString()
     .slice(0, 19)
     .replace(/:/g, "-")}.json`;
