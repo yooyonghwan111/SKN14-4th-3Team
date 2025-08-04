@@ -165,9 +165,11 @@ class RAGIndexer:
 
         # base64 길이 800으로 제한
         user_img = user_img[:800]
+        print(f"Searching for image: {user_img}")
 
         # 유사도 검색
         results = self.vectordb.similarity_search_with_score(user_img, k=k)
+        print(f"Search results: {results}")
 
         if not results:
             return -1

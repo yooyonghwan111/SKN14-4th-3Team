@@ -37,6 +37,7 @@ def search_vector_db_image(img_path):
 
     # 이미지 로드해서 모델명 검색
     img_base64 = image_to_base64(img_path)
+    print(f"Searching for image1212: {img_path}")
 
     # 유사도 검색
     model_nm = indexer.search_and_show(img_base64)
@@ -118,6 +119,7 @@ def analyze_query_and_retrieve(query: str, retriever, llm):
     for keyword in keywords:
         try:
             docs = retriever.invoke(keyword)
+            print(f"검색어 '{keyword}'에 대한 검색 결과: {len(docs)}개 문서")
             all_contexts.extend(docs)
         except Exception as e:
             print(f"벡터 검색 오류: {e}")

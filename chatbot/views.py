@@ -1,5 +1,6 @@
 import os
 import json
+import tempfile
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -30,17 +31,23 @@ class ModelSearchView(View):
         if not image_file:
             return HttpResponseBadRequest("No image file uploaded.")
 
-        # 임시 저장
-        temp_path = f"/tmp/{image_file.name}"
-        with open(temp_path, "wb+") as f:
-            for chunk in image_file.chunks():
-                f.write(chunk)
+        print(f"Received image file: {image_file.name}")
 
+        # 안전한 임시 파일 생성
         try:
+            with tempfile.NamedTemporaryFile(
+                delete=False, suffix=os.path.splitext(image_file.name)[-1]
+            ) as tmp_file:
+                for chunk in image_file.chunks():
+                    tmp_file.write(chunk)
+                temp_path = tmp_file.name
+
+            print(f"Saved file to: {temp_path}")
+
+            # 벡터 DB 검색
             model_code = search_vector_db_image(temp_path)
+            print(f"Model code found: {model_code}")
+
             return JsonResponse({"model_code": model_code})
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
-        finally:
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
