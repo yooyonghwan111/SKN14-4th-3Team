@@ -24,7 +24,9 @@ const imageDisplayArea = document.getElementById("imageDisplayArea");
 const conversationList = document.getElementById("conversationList");
 const newChatBtn = document.getElementById("newChatBtn");
 const clearAllBtn = document.getElementById("clearAllBtn");
+const deleteCurrBtn = document.getElementById("deleteCurrBtn");
 const downloadBtn = document.getElementById("downloadBtn");
+const downloadCurrBtn = document.getElementById("downloadCurrBtn");
 const totalMessages = document.getElementById("totalMessages");
 const totalConversations = document.getElementById("totalConversations");
 
@@ -52,7 +54,9 @@ function setupEventListeners() {
   // 버튼 이벤트
   newChatBtn.addEventListener("click", createNewConversation);
   clearAllBtn.addEventListener("click", clearAllConversations);
+  deleteCurrBtn.addEventListener("click", deleteCurrentConversation);
   downloadBtn.addEventListener("click", downloadChatHistory);
+  downloadCurrBtn.addEventListener("click", downloadChatCurrHistory);
 }
 
 // 채팅 제출 처리
@@ -77,7 +81,7 @@ async function handleChatSubmit(e) {
   showTypingIndicator();
   try {
     const response = await sendChatQuery(message, history);
-    console.log("서버 응답:", response);
+    // console.log("서버 응답:", response);
     hideTypingIndicator();
 
     const reply = response.response || "응답을 불러오지 못했습니다.";
@@ -93,7 +97,7 @@ async function handleChatSubmit(e) {
         timestamp: new Date(),
       });
 
-      console.warn("응답이 도착했지만 대화방이 바뀌어 해당 방에만 저장되었습니다.");
+      // console.warn("응답이 도착했지만 대화방이 바뀌어 해당 방에만 저장되었습니다.");
     }
 
     updateStats();
@@ -343,6 +347,37 @@ function clearAllConversations() {
   }
 }
 
+function deleteCurrentConversation() {
+  if (confirm("정말로 현재 대화를 삭제하시겠습니까?")) {
+    // 현재 대화를 삭제
+    delete conversations[currentConversationId];
+
+    const remainingIds = Object.keys(conversations);
+    if (remainingIds.length > 0) {
+      // 가장 ID가 낮은 대화로 이동
+      currentConversationId = remainingIds.sort((a, b) => parseInt(a) - parseInt(b))[0];
+    } else {
+      // 남은 대화가 없으면 새 대화 생성
+      currentConversationId = "1";
+      conversations[currentConversationId] = {
+        title: "대화 1",
+        messages: [
+          {
+            role: "system",
+            content: "세탁기/건조기 매뉴얼 Q&A 챗봇이 시작되었습니다.",
+          },
+        ],
+        image: null,
+      };
+    }
+
+    updateConversationList();
+    updateChatDisplay();
+    updateStats();
+  }
+}
+
+
 // 채팅 기록 다운로드
 function downloadChatHistory() {
   const data = {
@@ -356,6 +391,36 @@ function downloadChatHistory() {
   const a = document.createElement("a");
   a.href = url;
   a.download = `chat_history_${new Date()
+    .toISOString()
+    .slice(0, 19)
+    .replace(/:/g, "-")}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// 현재 대화 기록만 다운로드
+function downloadChatCurrHistory() {
+  const currConv = conversations[currentConversationId];
+  if (!currConv) {
+    alert("현재 대화 기록이 없습니다.");
+    return;
+  }
+
+  const data = {
+    title: currConv.title,
+    messages: currConv.messages,
+    image: currConv.image,
+    downloadDate: new Date().toISOString(),
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/json",
+  });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `chat_${currentConversationId}_${new Date()
     .toISOString()
     .slice(0, 19)
     .replace(/:/g, "-")}.json`;
