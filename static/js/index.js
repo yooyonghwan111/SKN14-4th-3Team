@@ -128,10 +128,20 @@ function addMessage(role, content) {
     content: content,
     timestamp: new Date(),
   });
+
   updateChatDisplay();
   updateStats();
   scrollToBottom();
+
+  // TTS 실행: assistant일 때만
+  if (role === "assistant") {
+    const ttsToggle = document.getElementById("ttsToggle");
+    if (ttsToggle && ttsToggle.checked) {
+      speakText(content, "ko");
+    }
+  }
 }
+
 
 // 타이핑 인디케이터
 function showTypingIndicator() {
@@ -320,6 +330,7 @@ function updateConversationList() {
 
 // 대화 전환
 function switchConversation(id) {
+  window.speechSynthesis.cancel();
   currentConversationId = id;
   updateConversationList();
   updateChatDisplay();
@@ -463,3 +474,18 @@ async function uploadImageAndGetModelCode(imageFile) {
   });
   return await response.json();
 }
+
+function speakText(text, lang = "ko") {
+  const synth = window.speechSynthesis;
+  if (!synth) return;
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = lang;
+  synth.speak(utter);
+}
+
+document.getElementById("ttsToggle").addEventListener("change", () => {
+  if (!document.getElementById("ttsToggle").checked) {
+    window.speechSynthesis.cancel();  // 음성 중단
+  }
+});
