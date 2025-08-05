@@ -11,10 +11,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 프로젝트 복사
 COPY . .
 
-# collectstatic 실행
-RUN python manage.py collectstatic --noinput
-
-# Gunicorn으로 실행
-CMD ["gunicorn", "skn4th.wsgi:application", "--bind", "0.0.0.0:8000"]
+# collectstatic 실행 & Gunicorn 실행
+CMD ["sh", "-c", "python manage.py collectstatic --noinput && gunicorn skn4th.wsgi:application --bind 0.0.0.0:8000"]
 
 EXPOSE 8000

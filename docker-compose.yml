@@ -1,17 +1,21 @@
 services:
-  web:
+  django:
     build: .
     container_name: django_app
-    expose:
-      - "8000"
+    env_file:
+      - .env
 
   nginx:
-    image: nginx:1.29
+    image: nginx:latest
     container_name: nginx_proxy
     ports:
       - "80:80"
     volumes:
       - ./static:/static
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./configs/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
-      - web
+      - django
+
+networks:
+  default:
+    driver: bridge
