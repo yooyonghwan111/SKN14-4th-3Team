@@ -24,7 +24,7 @@ const imageDisplayArea = document.getElementById("imageDisplayArea");
 const conversationList = document.getElementById("conversationList");
 const newChatBtn = document.getElementById("newChatBtn");
 const clearAllBtn = document.getElementById("clearAllBtn");
-const clearCurrBtn = document.getElementById("clearCurrBtn");
+const deleteCurrBtn = document.getElementById("deleteCurrBtn");
 const downloadBtn = document.getElementById("downloadBtn");
 const downloadCurrBtn = document.getElementById("downloadCurrBtn");
 const totalMessages = document.getElementById("totalMessages");
@@ -54,7 +54,7 @@ function setupEventListeners() {
   // 버튼 이벤트
   newChatBtn.addEventListener("click", createNewConversation);
   clearAllBtn.addEventListener("click", clearAllConversations);
-  clearCurrBtn.addEventListener("click", clearCurrConversations);
+  deleteCurrBtn.addEventListener("click", deleteCurrentConversation);
   downloadBtn.addEventListener("click", downloadChatHistory);
   downloadCurrBtn.addEventListener("click", downloadChatCurrHistory);
 }
@@ -81,7 +81,7 @@ async function handleChatSubmit(e) {
   showTypingIndicator();
   try {
     const response = await sendChatQuery(message, history);
-    console.log("서버 응답:", response);
+    // console.log("서버 응답:", response);
     hideTypingIndicator();
 
     const reply = response.response || "응답을 불러오지 못했습니다.";
@@ -97,7 +97,7 @@ async function handleChatSubmit(e) {
         timestamp: new Date(),
       });
 
-      console.warn("응답이 도착했지만 대화방이 바뀌어 해당 방에만 저장되었습니다.");
+      // console.warn("응답이 도착했지만 대화방이 바뀌어 해당 방에만 저장되었습니다.");
     }
 
     updateStats();
@@ -347,12 +347,20 @@ function clearAllConversations() {
   }
 }
 
-// 현재 대화 삭제 (해당 대화만 초기화)
-function clearCurrConversations() {
-  if (confirm("정말로 현재 대화 기록을 삭제하시겠습니까?")) {
-    if (conversations[currentConversationId]) {
+function deleteCurrentConversation() {
+  if (confirm("정말로 현재 대화를 삭제하시겠습니까?")) {
+    // 현재 대화를 삭제
+    delete conversations[currentConversationId];
+
+    const remainingIds = Object.keys(conversations);
+    if (remainingIds.length > 0) {
+      // 가장 ID가 낮은 대화로 이동
+      currentConversationId = remainingIds.sort((a, b) => parseInt(a) - parseInt(b))[0];
+    } else {
+      // 남은 대화가 없으면 새 대화 생성
+      currentConversationId = "1";
       conversations[currentConversationId] = {
-        title: `대화 ${currentConversationId}`,
+        title: "대화 1",
         messages: [
           {
             role: "system",
@@ -361,13 +369,14 @@ function clearCurrConversations() {
         ],
         image: null,
       };
-      updateChatDisplay();
-      updateStats();
-    } else {
-      alert("현재 대화를 찾을 수 없습니다.");
     }
+
+    updateConversationList();
+    updateChatDisplay();
+    updateStats();
   }
 }
+
 
 // 채팅 기록 다운로드
 function downloadChatHistory() {
