@@ -1,5 +1,6 @@
 import os
 import json
+import asyncio
 import logging
 from dotenv import load_dotenv
 from pdfminer.high_level import extract_text
@@ -10,6 +11,7 @@ from langchain_tavily import TavilySearch
 from langchain_core.documents import Document
 from .rag_indexer_class import IndexConfig, RAGIndexer
 from .utils import image_to_base64
+from concurrent.futures import ThreadPoolExecutor
 
 
 # pdfminer 경고 무시
@@ -51,83 +53,113 @@ def extract_text_from_pdf(pdf_path):
         print(f"PDF 읽기 실패 {pdf_path}: {e}")
         return ""
 
-
-def analyze_query_and_retrieve(query: str, retriever, llm):
-    # 질문 분석 프롬프트
+def create_prompt_chain(llm):
     prompt = ChatPromptTemplate.from_messages(
         [
             (
                 "system",
                 """당신은 사용자의 질문을 분석하는 전문가입니다. 
-        주어진 질문에서 다음을 추출하세요:
-        
-        1. 주요 키워드 (3-5개)
-        2. 질문의 핵심 주제
-        3. 구체적인 조건이나 요구사항
-        4. 답변에서 다뤄야 할 세부 사항들
-        
-        JSON 형식으로 출력하세요:
-        {{
-            "keywords": ["키워드1", "키워드2", "키워드3"],
-            "main_topic": "주제",
-            "conditions": ["조건1"],
-            "details": ["세부사항1"]
-        }}""",
+                주어진 질문에서 다음을 추출하세요:
+                1. 주요 키워드 (3-5개)
+                2. 질문의 핵심 주제
+                3. 구체적인 조건이나 요구사항
+                4. 답변에서 다뤄야 할 세부 사항들
+                
+                JSON 형식으로 출력하세요:
+                {
+                    "keywords": ["키워드1", "키워드2", "키워드3"],
+                    "main_topic": "주제",
+                    "conditions": ["조건1"],
+                    "details": ["세부사항1"]
+                }
+                """,
             ),
             ("human", "질문: {query}"),
         ]
     )
+    return prompt | llm | StrOutputParser()
 
-    chain = prompt | llm | StrOutputParser()
-    analysis_result = chain.invoke({"query": query})
 
-    # JSON 파싱
+async def analyze_with_llm(query, llm, executor):
+    chain = create_prompt_chain(llm)
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(executor, chain.invoke, {"query": query})
+
+
+async def search_with_tavily(query, tavily_tool, executor):
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(executor, tavily_tool.invoke, {"query": query})
+
+
+async def retrieve_from_vector(keywords, retriever, executor):
+    loop = asyncio.get_running_loop()
+    all_docs = []
+
+    async def get_docs(keyword):
+        try:
+            return await loop.run_in_executor(executor, retriever.invoke, keyword)
+        except Exception as e:
+            print(f"[벡터 검색 오류] '{keyword}': {e}")
+            return []
+
+    tasks = [get_docs(k) for k in keywords]
+    results = await asyncio.gather(*tasks)
+    for docs in results:
+        all_docs.extend(docs)
+    return all_docs
+
+
+def parse_analysis_result(result: str, fallback_query: str):
     try:
-        data = json.loads(analysis_result)
+        data = json.loads(result)
         keywords = data.get("keywords", [])
-    except Exception:
-        keywords = [query]
+        return keywords, result  # JSON 파싱 성공
+    except json.JSONDecodeError as e:
+        print(f"[LLM 분석 결과 JSON 파싱 실패]: {e}")
+        return [fallback_query], ""  # fallback 처리
 
+
+async def analyze_query_and_retrieve_async(query: str, retriever, llm, tavily_tool):
     all_contexts = []
 
-    # TavilySearch로 웹 검색 도구 설정
-    tavily_tool = TavilySearch(max_results=5)
-
-    try:
-        # Tavily에서 검색
-        search_result = tavily_tool.invoke({"query": query})
-
-        # 'results' 리스트 추출
-        web_results = search_result.get("results", [])
-
-        # 각 결과를 Document로 변환
-        for item in web_results:
-            content = item.get("content", "")
-            url = item.get("url", "")
-
-            if content:  # 내용이 있으면 추가
-                doc = Document(
-                    page_content=content,
-                    metadata={"source": url, "title": item.get("title", "")},
-                )
-                all_contexts.append(doc)
-    except Exception as e:
-        print(f"웹 검색 오류: {e}")
-
-    # 기존 벡터 retriever도 검색
-    for keyword in keywords:
+    # with로 executor 명시적 자원관리
+    with ThreadPoolExecutor() as executor:
         try:
-            docs = retriever.invoke(keyword)
-            all_contexts.extend(docs)
-        except Exception as e:
-            print(f"벡터 검색 오류: {e}")
-            continue
+            # LLM 분석 + 웹 검색 병렬 처리
+            llm_task = analyze_with_llm(query, llm, executor)
+            tavily_task = search_with_tavily(query, tavily_tool, executor)
+            analysis_result, search_result = await asyncio.gather(llm_task, tavily_task)
 
-    return all_contexts, analysis_result
+            # 분석 결과에서 키워드 추출
+            keywords, parsed_result = parse_analysis_result(analysis_result, query)
+
+            # Tavily 검색 결과 → 문서화
+            web_results = search_result.get("results", [])
+            for item in web_results:
+                content = item.get("content", "")
+                url = item.get("url", "")
+                if content:
+                    doc = Document(
+                        page_content=content,
+                        metadata={"source": url, "title": item.get("title", "")},
+                    )
+                    all_contexts.append(doc)
+
+            # 벡터 검색도 병렬 처리
+            vector_docs = await retrieve_from_vector(keywords, retriever, executor)
+            all_contexts.extend(vector_docs)
+
+            return all_contexts, parsed_result
+
+        except Exception as e:
+            print(f"[전체 처리 오류]: {e}")
+            return [], ""
 
 
 def enhanced_chain(query: str, retriever, llm, cot_prompt, history=[]):
-    context, analysis = analyze_query_and_retrieve(query, retriever, llm)
+    tavily_tool = TavilySearch(max_results=5)
+    context, analysis = asyncio.run(analyze_query_and_retrieve_async(query, retriever, llm, tavily_tool))
+    
     prompt_value = cot_prompt.invoke(
         {"query": query, "analysis": analysis, "context": context}
     )
