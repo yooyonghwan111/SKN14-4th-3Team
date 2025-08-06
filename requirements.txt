@@ -7,3 +7,7 @@ langchain_community==0.3.27
 langchain_tavily==0.2.7
 pdfminer.six
 python-dotenv
+gunicorn
+uvicorn
+python-decouple
+whitenoise
