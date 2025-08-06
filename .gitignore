@@ -176,3 +176,5 @@ cython_debug/
 staticfiles
 
 chroma
+data
+data_backup
