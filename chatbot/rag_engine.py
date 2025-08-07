@@ -53,6 +53,7 @@ def extract_text_from_pdf(pdf_path):
         print(f"PDF 읽기 실패 {pdf_path}: {e}")
         return ""
 
+
 def create_prompt_chain(llm):
     prompt = ChatPromptTemplate.from_messages(
         [
@@ -158,8 +159,10 @@ async def analyze_query_and_retrieve_async(query: str, retriever, llm, tavily_to
 
 def enhanced_chain(query: str, retriever, llm, cot_prompt, history=[]):
     tavily_tool = TavilySearch(max_results=5)
-    context, analysis = asyncio.run(analyze_query_and_retrieve_async(query, retriever, llm, tavily_tool))
-    
+    context, analysis = asyncio.run(
+        analyze_query_and_retrieve_async(query, retriever, llm, tavily_tool)
+    )
+
     prompt_value = cot_prompt.invoke(
         {"query": query, "analysis": analysis, "context": context}
     )
