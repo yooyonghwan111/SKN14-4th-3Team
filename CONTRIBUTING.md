@@ -17,9 +17,12 @@ pre-commit install
 
 ```
 OPENAI_API_KEY
-MODEL_NAME
 TAVILY_API_KEY
+SECRET_KEY
+ALLOWED_HOSTS
+DEBUG
 ```
 
 ### chatbot앱 아래에 `chroma` 백터 디비 포함하기
 - chroma는 3rd project에서 생성하시면 됩니다.
+- [chroma DB 링크](https://huggingface.co/rwr9857/SKN14-3rd-3Team/tree/main)

@@ -1,9 +1,9 @@
 import os
 import logging
+from tqdm import tqdm
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 from dataclasses import dataclass
-from tqdm import tqdm
 from langchain_chroma.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
 from chatbot.utils import image_to_base64, summarize_image
