@@ -1,0 +1,40 @@
+<!-- 네비게이션바 -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+  <div class="container-fluid">
+      <a class="navbar-brand" href="{% url 'main:index' %}">🇶 🇳 🇦</a>
+      <button class="navbar-toggler" type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#navbarSupportedContent"
+              aria-controls="navbarSupportedContent"
+              aria-expanded="false"
+              aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mb-2 mb-lg-0">
+          {# django에서는 user객체(django.contrib.auth)를 선언없이 사용가능 #}
+          {% if user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link" href="#" title="{{ user.username }}">
+                {% if user.userdetail.profile %}
+                  <img src="{{ user.userdetail.profile.url }}" class="rounded-circle" width="28" height="28" alt="">
+                {% else %}
+                  <img src="/media/profile/default.jpg" class="rounded-circle" width="28" alt="">
+                {% endif %}
+              </a>
+            </li>
+            <li>
+                <a class="nav-link" href="{% url 'uauth:logout' %}">로그아웃</a>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'uauth:login' %}">로그인</a>
+            </li>
+            <li>
+                <a class="nav-link" href="{% url 'uauth:signup' %}">회원가입</a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+  </div>
+</nav>

@@ -1,0 +1,20 @@
+{# django form이 유효성검증 이후 생성한 오류메세지를 출력 #}
+{% if form.errors %}
+  <div class="alert alert-danger">
+    {# 필드오류 #}
+    {% for field in form %}
+      {% if field.errors %}
+        <div>
+          <strong>{{ field.label}}</strong>
+          {{ field.errors }}
+        </div>
+      {% endif %}
+    {% endfor %}
+    
+    {# 논필드오류#}
+    {% for error in form.non_field_errors %}
+        <div><strong>{{ error }}</strong></div>
+    {% endfor %}
+
+  </div>
+{% endif %}
