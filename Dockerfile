@@ -10,14 +10,6 @@ ENV PYTHONUNBUFFERED=1
 # 작업 디렉토리 설정
 WORKDIR /app
 
-# 4. 시스템 패키지 목록 업데이트 및 필수 개발 도구 설치 (pkg-config 추가!)
-RUN apt-get update && apt-get install -y \
-    pkg-config \
-    default-libmysqlclient-dev \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
-
 # 종속성 복사 및 설치
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
