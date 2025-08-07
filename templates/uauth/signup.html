@@ -1,95 +1,111 @@
-{% extends "../layout/base.html" %}
-
-{% block style %}
-    <style>
-        .feedback.error {
-            color: red;
-        }
-        .feedback.success {
-            color: green;
-        }
-    </style>
-{% endblock %}
-
-{% comment %}
-# Ajax
-* Asynchronous JavaScript and XML 이란 용어로써 2005년 2월 제시 제임스 카렛이 처음 사용하면서 알려지게 되었음
-* 서버로부터 데이터를 가져와 전체 페이지를 새로 고치지 않고 일부만 로드할 수 있게 하는 기법으로 비동기식 요청을 보내는데 필요한 기술을 말함
-
-## 동기식/비동기식이란?
-동기식은 서버와 클라이언트가 동시에 통신하여 프로세스를 수행 및 종료까지 같이함. 
-만약 서버에서 호출된 결과까지의 시간이 지연이 생길 경우 웹에서는 아무런 작동 없이 기다려야함.
-새로운 콘텐츠를 추가, 불러오기 위해서는 페이지를 리로드 하거나 이동해야함.
-
-이에 반해 비동기식은 페이지 리로딩 없이, 동기식의 서버요청 사이사이 추가적인 요청과 처리가 가능함.
-
-* 실시간 검색어 로딩
-* 검색어자동 완성
-* 아이디 중복체크 등...
-
-{% endcomment %}
-
-{% block content %}
-<div class="container my-3">
-  <h5 class="my-3 border-bottom pb-2">회원가입</h5>
-  {% include "../layout/form_errors.html" %}
-  {# enctype="application/x-www-form-urlencoded" 기본값 #}
-  <form method="post" enctype="multipart/form-data">
+{% extends "../layout/base.html" %} {% block style %}
+<style>
+  .feedback.error {
+    color: red;
+  }
+  .feedback.success {
+    color: green;
+  }
+  .signup-card {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    max-width: 400px;
+    margin: 0 auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  .signup-title {
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+  }
+  .signup-subtext {
+    text-align: center;
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+</style>
+{% endblock %} {% block content %}
+<div
+  class="container d-flex justify-content-center align-items-center"
+  style="min-height: 100vh; background: #5a4ff3"
+>
+  <div class="signup-card">
+    <div class="text-center mb-4">
+        <div><a href="{% url 'main:index' %}" style="text-decoration: none; color: inherit;">🇶 🇳 🇦</a></div>
+    </div>
+    <div class="signup-title">회원가입</div>
+    <div class="signup-subtext">
+      이미 계정이 있으신가요? <a href="{% url 'uauth:login' %}">로그인</a>
+    </div>
+    {% include "../layout/form_errors.html" %}
+    <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
       <div class="mb-3">
-          <label for="username">사용자 이름</label>
-          <input type="text" class="form-control" name="username" id="username" value="{{ form.username.value | default_if_none:'' }}">
-          <sub id="username-feedback" class="feedback"></sub>
+        <label for="username">아이디</label>
+        <input
+          type="text"
+          class="form-control"
+          name="username"
+          id="username"
+          value="{{ form.username.value|default_if_none:'' }}"
+        />
+        <sub id="username-feedback" class="feedback"></sub>
       </div>
       <div class="mb-3">
-          <label for="password1">비밀번호</label>
-          <input type="password" class="form-control" name="password1" id="password1" value="{{ form.password1.value | default_if_none:'' }}">
+        <label for="password1">비밀번호</label>
+        <input
+          type="password"
+          class="form-control"
+          name="password1"
+          id="password1"
+          value="{{ form.password1.value | default_if_none:'' }}"
+        />
       </div>
       <div class="mb-3">
-          <label for="password2">비밀번호 확인</label>
-          <input type="password" class="form-control" name="password2" id="password2" value="{{ form.password2.value | default_if_none:'' }}">
+        <label for="password2">비밀번호 확인</label>
+        <input
+          type="password"
+          class="form-control"
+          name="password2"
+          id="password2"
+          value="{{ form.password2.value | default_if_none:'' }}"
+        />
       </div>
-      <button type="submit" class="btn btn-primary">회원가입하기</button>
-  </form>
+      <button type="submit" class="btn btn-primary w-100">회원가입</button>
+    </form>
+  </div>
 </div>
-{% endblock content %}
-
-
-{% block script %}
+{% endblock %} {% block script %}
 <script>
-    const $username = document.querySelector("#username");
-    const $usernameFeedback = document.querySelector("#username-feedback");
+  const $username = document.querySelector("#username");
+  const $usernameFeedback = document.querySelector("#username-feedback");
 
-    $username.oninput = (e) => {
-        const usernameValue = $username.value;
-        console.log(usernameValue);
+  $username.oninput = () => {
+    const usernameValue = $username.value.trim();
 
-        // 아이디 4글자이상 
-        if (usernameValue.length < 4){
+    if (usernameValue.length < 4) {
+      $usernameFeedback.textContent = "";
+      return;
+    }
 
+    fetch(
+      `{% url 'uauth:check_username' %}?username=${encodeURIComponent(
+        usernameValue
+      )}`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.available) {
+          $usernameFeedback.textContent = "이 아이디는 사용 가능합니다.";
+          $usernameFeedback.classList.add("success");
+          $usernameFeedback.classList.remove("error");
         } else {
-            // 서버에 아이디중복체크 비동기요청
-            // fetch api, DOM처리, timerAPI등 js비동기식 작동한다.
-            fetch(`{% url 'uauth:check_username' %}?username=${usernameValue}`)
-                .then((response) => response.json()) // 응답 json을 js파싱처리 
-                .then((data) => {
-                    console.log(data);
-                    const {available} = data;
-                    if (available) {
-                        $usernameFeedback.textContent = '이 아이디는 사용가능합니다.';
-                        $usernameFeedback.classList.add('success');
-                        $usernameFeedback.classList.remove('error');
-                    } else {
-                        $usernameFeedback.textContent = '이 아이디는 이미 사용중입니다.';
-                        $usernameFeedback.classList.add('error');
-                        $usernameFeedback.classList.remove('success');
-                    }
-
-
-                });
-            console.log('요청완료!'); // fetch비동기방식으로 처리되므로, fetch결과를 기다리지 않고, 이 줄이 실행된다.
+          $usernameFeedback.textContent = "이 아이디는 이미 사용 중입니다.";
+          $usernameFeedback.classList.add("error");
+          $usernameFeedback.classList.remove("success");
         }
-    };
-
+      });
+  };
 </script>
-{% endblock script %}
+{% endblock %}
