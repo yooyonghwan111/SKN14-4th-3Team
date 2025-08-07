@@ -12,18 +12,19 @@ EMBEDDINGS_MODEL = "text-embedding-3-small"
 INDEX_NAME = "manuals-index"
 
 
-class IndexConfig:
-    def __init__(self, index_name: str, embedding_model: str):
+class PineConeIndexConfig:
+    def __init__(self, api: str, index_name: str, embedding_model: str):
+        self.api = api
         self.index_name = index_name
         self.embedding_model = embedding_model
 
 
-class RAGIndexer:
-    def __init__(self, config: IndexConfig):
+class PineConeIndexer:
+    def __init__(self, config: PineConeIndexConfig):
         self.config = config
 
         # Pinecone 클라이언트 초기화
-        self.pc = Pinecone(api_key=PINECONE_API_KEY)
+        self.pc = Pinecone(api_key=config.api)
         self.index = self.pc.Index(config.index_name)
 
         # 임베딩 모델 초기화
@@ -77,7 +78,6 @@ class RAGIndexer:
 def search_manuals(
     query: str,
     k: int = 5,
-    index_name: str = "",
 ):
     """
     매뉴얼 검색 함수
@@ -89,10 +89,12 @@ def search_manuals(
     """
 
     # 설정 생성
-    config = IndexConfig(index_name=index_name, embedding_model=EMBEDDINGS_MODEL)
+    config = PineConeIndexConfig(
+        api=PINECONE_API_KEY, index_name=INDEX_NAME, embedding_model=EMBEDDINGS_MODEL
+    )
 
     # 인덱서 생성 및 실행
-    indexer = RAGIndexer(config)
+    indexer = PineConeIndexer(config)
 
     # 매뉴얼 검색
     docs = indexer.similarity_search(query, k=k)
@@ -123,7 +125,7 @@ def main():
     # 기존 코드와 동일한 검색 실행
     query = "아가사랑_3kg_WA30DG2120EE의 주의 사항"
 
-    search_manuals(query, k=3, index_name=INDEX_NAME)
+    search_manuals(query, k=3)
 
 
 if __name__ == "__main__":
