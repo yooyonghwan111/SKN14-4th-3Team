@@ -1,5 +1,14 @@
 from pathlib import Path
 from decouple import config
+import os
+from dotenv import load_dotenv
+
+# .env 파일 로드
+load_dotenv()
+
+# SECRET_KEY 와 DEBUG
+SECRET_KEY = os.environ.get('SECRET_KEY')
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,6 +31,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'users', 
 ]
 
 MIDDLEWARE = [
@@ -114,3 +124,20 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# 데이터베이스 설정
+DATABASES = {
+    'default': {
+        'ENGINE': os.environ.get('DATABASE_ENGINE'),
+        'NAME': os.environ.get('DATABASE_NAME'),
+        'USER': os.environ.get('DATABASE_USER'),
+        'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
+        'HOST': os.environ.get('DATABASE_HOST'),
+        'PORT': os.environ.get('DATABASE_PORT'),
+    }
+}
+
+# Static 파일 설정 (Dockerfile의 collectstatic을 위함)
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'static' # Nginx 볼륨과 연결될 경로

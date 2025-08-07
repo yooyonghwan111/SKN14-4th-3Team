@@ -11,4 +11,5 @@ gunicorn
 uvicorn
 python-decouple
 whitenoise
+mysqlclient
 pinecone
