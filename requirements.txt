@@ -12,3 +12,4 @@ uvicorn
 python-decouple
 whitenoise
 pinecone
+Pillow
