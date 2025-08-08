@@ -17,7 +17,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 프로젝트 복사
 COPY . .
 
-# collectstatic 실행 & Gunicorn 실행
-CMD ["sh", "-c", "python manage.py collectstatic --noinput && gunicorn -c gunicorn.conf.py skn4th.asgi:application"]
+# 마이그레이션, collectstatic 실행 & Gunicorn 실행
+CMD ["sh", "-c", "python manage.py makemigrations && python manage.py migrate && python manage.py collectstatic --noinput && gunicorn -c gunicorn.conf.py skn4th.asgi:application"]
 
 EXPOSE 8000

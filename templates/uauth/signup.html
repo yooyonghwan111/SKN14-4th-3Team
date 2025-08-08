@@ -1,0 +1,117 @@
+{% extends "../layout/base.html" %} {% block style %}
+<style>
+  .feedback.error {
+    color: red;
+  }
+  .feedback.success {
+    color: green;
+  }
+  .signup-card {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    max-width: 400px;
+    margin: 0 auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  .signup-title {
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+  }
+  .signup-subtext {
+    text-align: center;
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+</style>
+{% endblock %} {% block content %}
+<div
+  class="container d-flex justify-content-center align-items-center"
+  style="min-height: 100vh"
+>
+  <div class="signup-card">
+    <div class="text-center mb-4">
+      <div>
+        <a
+          href="{% url 'main:index' %}"
+          style="text-decoration: none; color: inherit"
+          >🇶 🇳 🇦</a
+        >
+      </div>
+    </div>
+    <div class="signup-title">회원가입</div>
+    <div class="signup-subtext">
+      이미 계정이 있으신가요? <a href="{% url 'uauth:login' %}">로그인</a>
+    </div>
+    {% include "../layout/form_errors.html" %}
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="username">아이디</label>
+        <input
+          type="text"
+          class="form-control"
+          name="username"
+          id="username"
+          value="{{ form.username.value|default_if_none:'' }}"
+        />
+        <sub id="username-feedback" class="feedback"></sub>
+      </div>
+      <div class="mb-3">
+        <label for="password1">비밀번호</label>
+        <input
+          type="password"
+          class="form-control"
+          name="password1"
+          id="password1"
+          value="{{ form.password1.value | default_if_none:'' }}"
+        />
+      </div>
+      <div class="mb-3">
+        <label for="password2">비밀번호 확인</label>
+        <input
+          type="password"
+          class="form-control"
+          name="password2"
+          id="password2"
+          value="{{ form.password2.value | default_if_none:'' }}"
+        />
+      </div>
+      <button type="submit" class="btn btn-primary w-100">회원가입</button>
+    </form>
+  </div>
+</div>
+{% endblock %} {% block script %}
+<script>
+  const $username = document.querySelector("#username");
+  const $usernameFeedback = document.querySelector("#username-feedback");
+
+  $username.oninput = () => {
+    const usernameValue = $username.value.trim();
+
+    if (usernameValue.length < 4) {
+      $usernameFeedback.textContent = "";
+      return;
+    }
+
+    fetch(
+      `{% url 'uauth:check_username' %}?username=${encodeURIComponent(
+        usernameValue
+      )}`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.available) {
+          $usernameFeedback.textContent = "이 아이디는 사용 가능합니다.";
+          $usernameFeedback.classList.add("success");
+          $usernameFeedback.classList.remove("error");
+        } else {
+          $usernameFeedback.textContent = "이 아이디는 이미 사용 중입니다.";
+          $usernameFeedback.classList.add("error");
+          $usernameFeedback.classList.remove("success");
+        }
+      });
+  };
+</script>
+{% endblock %}

@@ -1,121 +1,119 @@
 {% extends "layout/base.html" %} {% load static %} {% block style %}
 <link rel="stylesheet" href="{% static 'css/index.css' %}" />
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+/>
 {% endblock style %} {% block content %}
 <div class="container-fluid py-3">
   <div class="main-container">
     <div class="row g-0">
-      <!-- 왼쪽: 대화 목록 -->
+      {% if user.is_authenticated %}
+                <!-- 왼쪽: 대화 목록 -->
       <div class="col-lg-2 col-md-3">
         <div class="conversation-list p-3">
-          <h6 class="mb-3">대화 목록</h6>
-          <div id="conversationList">
-            <button class="btn conversation-item w-100 active" data-id="1">
-              대화 1
+          <!-- 헤더 -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex align-items-center">
+              <h6 class="mb-0 me-2">메세지</h6>
+              <span class="badge bg-secondary rounded-pill" id="totalConversations">1</span>
+            </div>
+            <button class="btn btn-primary btn-sm rounded-circle new-chat-plus" id="newChatBtn">
+              <i class="bi bi-plus"></i>
             </button>
           </div>
-          <button class="btn btn-secondary w-100 mt-3" id="newChatBtn">
-            새 대화 시작
-          </button>
+          
+          <!-- 대화 목록 -->
+          <div id="conversationList">
+            <!-- 대화 항목들이 JavaScript에서 동적으로 생성됩니다 -->
+          </div>
+          
+          <!-- 하단 버튼들 -->
+          <div class="mt-4">
+            <button class="btn btn-outline-secondary w-100 mb-2" id="leftDeleteCurrBtn">현재 대화 삭제</button>
+            <button class="btn btn-outline-secondary w-100 mb-2" id="leftDownloadCurrBtn">현재 대화 저장</button>
+            <a class="nav-link text-center" href="{% url 'uauth:logout' %}">로그아웃</a>
+          </div>
         </div>
       </div>
+        {% else %}
+  <div class="col-lg-2 col-md-3 border-end px-3 py-4 d-flex flex-column align-items-center">
 
-      <!-- 중앙: 채팅 영역 -->
-      <div class="col-lg-7 col-md-6">
-        <div class="p-4">
-          <!-- 채팅 메시지 -->
-          <div class="chat-messages" id="chatMessages">
-            <div class="system-message">
-              세탁기/건조기 매뉴얼 Q&A 챗봇이 시작되었습니다.
-            </div>
-          </div>
+  <!-- 로그인 버튼 -->
+  <a href="{% url 'uauth:login' %}" class="btn btn-primary w-100 mb-2 text-center">로그인</a>
 
-          <!-- 입력 폼 -->
-          <div class="chat-input-form">
-            <div class="mb-3">
-              <label class="form-label fw-bold"> 이미지 업로드 및 질문 </label>
-            </div>
+  <!-- 회원가입 텍스트 -->
+  <a href="{% url 'uauth:signup' %}" class="text-muted small text-decoration-none">회원가입</a>
+</div>
+        {% endif %}
 
-            <form id="chatForm">
-              <div class="input-group mb-3">
-                <input
-                  type="text"
-                  class="form-control"
-                  id="messageInput"
-                  placeholder="세탁기/건조기에 대해 궁금한 점을 물어보세요!"
-                />
-                <button class="btn send-btn" type="submit">전송</button>
+<!-- 중앙: 채팅 영역 -->
+<div class="col-lg-7 col-md-6 d-flex flex-column justify-content-between chat-container">
+  <!-- 채팅 헤더 -->
+  <div class="chat-header px-4 py-3 border-bottom d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center">
+      <div>
+        <div class="fw-bold">세탁기/건조기 챗봇</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 채팅 메시지 영역 -->
+  <div id="chatMessages" class="flex-grow-1 px-4 py-3 overflow-auto chat-messages">
+    <div class="system-message text-muted small text-center mb-3">
+      세탁기/건조기 매뉴얼 Q&A 챗봇이 시작되었습니다.
+    </div>
+    <!-- 메시지들은 JS에서 동적으로 삽입 -->
+  </div>
+
+  <!-- 입력 영역 -->
+  <div class="chat-input-area border-top px-4 py-3">
+    <form id="chatForm" method="POST" enctype="multipart/form-data">
+      <div class="input-group">
+        <label for="imageInput" class="btn btn-link input-group-text">
+          <i class="bi bi-paperclip"></i>
+        </label>
+        <input type="file" id="imageInput" accept="image/*" hidden />
+        <input
+          type="text"
+          id="messageInput"
+          class="form-control"
+          placeholder="Type a message"
+        />
+        <button class="btn btn-primary" type="submit">
+          <i class="bi bi-send-fill"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+        <!-- 오른쪽: 이미지 및 스펙 -->
+        <div class="col-lg-3 col-md-3">
+          <div class="sidebar">
+            <h6 class="mb-3">업로드된 이미지 및 스펙</h6>
+            <div id="imageDisplayArea">
+              <div class="text-center text-muted">
+                <p>현재 대화에 업로드된 이미지가 없습니다.</p>
               </div>
-            </form>
-
-            <!-- 이미지 업로드 영역 -->
-            <div class="image-upload-area" id="imageUploadArea">
-              <input
-                type="file"
-                id="imageInput"
-                accept="image/*"
-                style="display: none"
-              />
-              <p class="text-muted mb-0">
-                클릭하거나 이미지를 드래그하여 업로드하세요
-              </p>
-              <small class="text-muted">JPG, JPEG, PNG 형식 지원</small>
             </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- 오른쪽: 이미지 및 스펙 -->
-      <div class="col-lg-3 col-md-3">
-        <div class="sidebar">
-          <h6 class="mb-3">업로드된 이미지 및 스펙</h6>
-          <div id="imageDisplayArea">
-            <div class="text-center text-muted">
-              <p>현재 대화에 업로드된 이미지가 없습니다.</p>
+            <hr />
+
+            <div class="alert info-alert">
+              <h6>정보</h6>
+              <small
+                >이 챗봇은 SAMSUNG/LG 세탁기/건조기 매뉴얼을 기반으로 한 Q&A
+                시스템입니다.</small
+              >
             </div>
-          </div>
-
-          <hr>
-
-          <h6>기능 메뉴</h6>
-          <button class="btn btn-danger w-100 mb-2" id="clearAllBtn">
-            모든 대화 기록 삭제
-          </button>
-          <button class="btn btn-secondary w-100 mb-4" id="downloadBtn">
-            모든 대화 기록 저장
-          </button>
-          <button class="btn btn-danger w-100 mb-2" id="deleteCurrBtn">
-            현재 대화 기록 삭제
-          </button>
-          <button class="btn btn-secondary w-100 mb-2" id="downloadCurrBtn">
-            현재 대화 기록 저장
-          </button>
-
-          <hr>
-
-          <h6>통계</h6>
-          <div>
-            <h3 id="totalMessages">0</h3>
-            <small>총 메시지</small>
-          </div>
-          <div>
-            <h3 id="totalConversations">1</h3>
-            <small>대화 수</small>
-          </div>
-
-          <hr>
-
-          <div class="alert info-alert">
-            <h6>정보</h6>
-            <small
-              >이 챗봇은 SAMSUNG/LG 세탁기/건조기 매뉴얼을 기반으로 한 Q&A
-              시스템입니다.</small
-            >
           </div>
         </div>
       </div>
     </div>
   </div>
+  {% endblock content %} {% block script %}
+  <script src="{% static 'js/index.js' %}"></script>
+  {% endblock script %}
 </div>
-{% endblock content %} {% block script %}
-<script src="{% static 'js/index.js' %}"></script>
-{% endblock script %}

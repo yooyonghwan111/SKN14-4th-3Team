@@ -67,12 +67,12 @@ def create_prompt_chain(llm):
                 4. 답변에서 다뤄야 할 세부 사항들
                 
                 JSON 형식으로 출력하세요:
-                {
+                {{
                     "keywords": ["키워드1", "키워드2", "키워드3"],
                     "main_topic": "주제",
                     "conditions": ["조건1"],
                     "details": ["세부사항1"]
-                }
+                }}
                 """,
             ),
             ("human", "질문: {query}"),
