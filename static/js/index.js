@@ -543,14 +543,44 @@ function updateConversationList() {
   
   conversationList.innerHTML = "";
   Object.keys(conversations).forEach((id) => {
-    const button = document.createElement("button");
-    button.className = `btn conversation-item w-100 ${
+    const wrapper = document.createElement("div");
+    wrapper.className = `conversation-item-wrapper mb-2 ${
       id === currentConversationId ? "active" : ""
     }`;
-    button.setAttribute("data-id", id);
-    button.innerHTML = `${conversations[id].title}`;
-    button.addEventListener("click", () => switchConversation(id));
-    conversationList.appendChild(button);
+    wrapper.setAttribute("data-id", id);
+    
+    wrapper.innerHTML = `
+      <div class="conversation-item d-flex align-items-center p-2">
+        <div class="conversation-avatar me-3">
+          <i class="bi bi-person-circle"></i>
+        </div>
+        <div class="conversation-content flex-grow-1" style="cursor: pointer;">
+          <div class="conversation-title">${conversations[id].title}</div>
+          <div class="conversation-subtitle">세탁기/건조기 매뉴얼 Q&A</div>
+        </div>
+        <div class="conversation-actions d-flex align-items-center">
+          <button class="btn btn-sm btn-outline-danger delete-conversation-btn me-2" 
+                  data-id="${id}" 
+                  title="대화 삭제"
+                  style="padding: 2px 6px; font-size: 12px;">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </div>
+    `;
+    
+    // 대화 선택 이벤트 (제목 부분 클릭)
+    const contentArea = wrapper.querySelector('.conversation-content');
+    contentArea.addEventListener("click", () => switchConversation(id));
+    
+    // 삭제 버튼 이벤트
+    const deleteBtn = wrapper.querySelector('.delete-conversation-btn');
+    deleteBtn.addEventListener("click", (e) => {
+      e.stopPropagation(); // 이벤트 버블링 방지
+      deleteSpecificConversation(id);
+    });
+    
+    conversationList.appendChild(wrapper);
   });
 }
 
@@ -594,30 +624,47 @@ async function clearAllConversations() {
 // 현재 대화 삭제
 async function deleteCurrentConversation() {
   if (confirm("정말로 현재 대화를 삭제하시겠습니까?")) {
+    await deleteSpecificConversation(currentConversationId);
+  }
+}
+
+// 특정 대화 삭제
+async function deleteSpecificConversation(conversationId) {
+  if (confirm("정말로 이 대화를 삭제하시겠습니까?")) {
     if (isAuthenticated) {
       // 로그인한 사용자는 서버에서 대화 삭제
       try {
-        await fetch(`/api/conversations/${currentConversationId}/`, {
+        const response = await fetch(`/api/conversations/${conversationId}/`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
           }
         });
+        
+        if (!response.ok) {
+          throw new Error('서버에서 대화 삭제에 실패했습니다.');
+        }
       } catch (error) {
         console.error('Error deleting conversation:', error);
+        alert('대화 삭제 중 오류가 발생했습니다.');
+        return;
       }
     }
     
-    // 현재 대화를 삭제
-    delete conversations[currentConversationId];
+    // 로컬에서 대화를 삭제
+    delete conversations[conversationId];
 
-    const remainingIds = Object.keys(conversations);
-    if (remainingIds.length > 0) {
-      // 가장 ID가 낮은 대화로 이동
-      currentConversationId = remainingIds.sort((a, b) => parseInt(a) - parseInt(b))[0];
-    } else {
-      // 남은 대화가 없으면 새 대화 생성
-      await createNewConversation();
+    // 삭제된 대화가 현재 대화였다면 다른 대화로 전환
+    if (conversationId === currentConversationId) {
+      const remainingIds = Object.keys(conversations);
+      if (remainingIds.length > 0) {
+        // 가장 ID가 낮은 대화로 이동
+        currentConversationId = remainingIds.sort((a, b) => parseInt(a) - parseInt(b))[0];
+      } else {
+        // 남은 대화가 없으면 새 대화 생성
+        await createNewConversation();
+        return;
+      }
     }
 
     updateConversationList();

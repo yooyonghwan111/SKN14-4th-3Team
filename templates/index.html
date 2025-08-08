@@ -12,17 +12,36 @@
                 <!-- 왼쪽: 대화 목록 -->
       <div class="col-lg-2 col-md-3">
         <div class="conversation-list p-3">
-          <h6 class="mb-3">대화 목록</h6>
-          <div id="conversationList">
-            <button class="btn conversation-item w-100 active" data-id="1">
-              대화 1
+          <!-- 헤더 -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex align-items-center">
+              <h6 class="mb-0 me-2">메세지</h6>
+              <span class="badge bg-secondary rounded-pill">2</span>
+            </div>
+            <button class="btn btn-primary btn-sm rounded-circle new-chat-plus" id="newChatBtn">
+              <i class="bi bi-plus"></i>
             </button>
           </div>
-          <button class="btn btn-secondary w-100 mt-3" id="newChatBtn">
-            새 대화 시작
-          </button>
+          
+          <!-- 검색창 -->
+          <div class="mb-3">
+            <div class="search-input-wrapper">
+              <i class="bi bi-search search-icon"></i>
+              <input type="text" class="form-control search-input" placeholder="메세지 검색">
+            </div>
+          </div>
+          
+          <!-- 대화 목록 -->
+          <div id="conversationList">
+            <!-- 대화 항목들이 JavaScript에서 동적으로 생성됩니다 -->
+          </div>
+          
+          <!-- 하단 버튼들 -->
+          <div class="mt-4">
+            <button class="btn btn-outline-secondary w-100 mb-2">모든 대화 삭제</button>
+            <a class="nav-link text-center" href="{% url 'uauth:logout' %}">로그아웃</a>
+          </div>
         </div>
-               <a class="nav-link" href="{% url 'uauth:logout' %}">로그아웃</a>
       </div>
         {% else %}
   <div class="col-lg-2 col-md-3 border-end px-3 py-4 d-flex flex-column align-items-center">
