@@ -28,11 +28,17 @@
 {% endblock %} {% block content %}
 <div
   class="container d-flex justify-content-center align-items-center"
-  style="min-height: 100vh; background: #5a4ff3"
+  style="min-height: 100vh"
 >
   <div class="signup-card">
     <div class="text-center mb-4">
-        <div><a href="{% url 'main:index' %}" style="text-decoration: none; color: inherit;">🇶 🇳 🇦</a></div>
+      <div>
+        <a
+          href="{% url 'main:index' %}"
+          style="text-decoration: none; color: inherit"
+          >🇶 🇳 🇦</a
+        >
+      </div>
     </div>
     <div class="signup-title">회원가입</div>
     <div class="signup-subtext">

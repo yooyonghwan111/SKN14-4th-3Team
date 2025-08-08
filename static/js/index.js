@@ -18,6 +18,7 @@ let isAuthenticated = false;
 // DOM 요소 (안전하게 가져오기)
 let chatMessages, messageInput, chatForm, imageInput, imageDisplayArea;
 let conversationList, newChatBtn, clearAllBtn, deleteCurrBtn, downloadBtn, downloadCurrBtn;
+let leftDeleteCurrBtn, leftDownloadCurrBtn;
 let totalMessages, totalConversations;
 
 function getDOMElements() {
@@ -32,6 +33,8 @@ function getDOMElements() {
   deleteCurrBtn = document.getElementById("deleteCurrBtn");
   downloadBtn = document.getElementById("downloadBtn");
   downloadCurrBtn = document.getElementById("downloadCurrBtn");
+  leftDeleteCurrBtn = document.getElementById("leftDeleteCurrBtn");
+  leftDownloadCurrBtn = document.getElementById("leftDownloadCurrBtn");
   totalMessages = document.getElementById("totalMessages");
   totalConversations = document.getElementById("totalConversations");
 }
@@ -212,6 +215,14 @@ function setupEventListeners() {
   }
   if (downloadCurrBtn) {
     downloadCurrBtn.addEventListener("click", downloadChatCurrHistory);
+  }
+  
+  // 왼쪽 패널 버튼 이벤트 (오른쪽 패널과 동일한 기능 연동)
+  if (leftDeleteCurrBtn) {
+    leftDeleteCurrBtn.addEventListener("click", deleteCurrentConversation);
+  }
+  if (leftDownloadCurrBtn) {
+    leftDownloadCurrBtn.addEventListener("click", downloadChatCurrHistory);
   }
 }
 
@@ -725,15 +736,19 @@ function downloadChatCurrHistory() {
 
 // 통계 업데이트
 function updateStats() {
-  if (!totalMessages || !totalConversations) return;
-  
   const totalMsg = Object.values(conversations).reduce(
     (total, conv) =>
       total + conv.messages.filter((m) => m.role !== "system").length,
     0
   );
-  totalMessages.textContent = totalMsg;
-  totalConversations.textContent = Object.keys(conversations).length;
+  
+  if (totalMessages) {
+    totalMessages.textContent = totalMsg;
+  }
+  
+  if (totalConversations) {
+    totalConversations.textContent = Object.keys(conversations).length;
+  }
 }
 
 function scrollToBottom() {
